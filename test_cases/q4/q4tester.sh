@@ -1,0 +1,13 @@
+python autograder.py -p --test test_cases/q4/0-expectimax1
+python autograder.py -p --test test_cases/q4/1-expectimax2
+python autograder.py -p --test test_cases/q4/2-one-ghost-3level
+python autograder.py -p --test test_cases/q4/3-one-ghost-4level
+python autograder.py -p --test test_cases/q4/4-two-ghosts-3level
+python autograder.py -p --test test_cases/q4/5-two-ghosts-4level
+python autograder.py -p --test test_cases/q4/6-1a-check-depth-one-ghost
+python autograder.py -p --test test_cases/q4/6-1b-check-depth-one-ghost
+python autograder.py -p --test test_cases/q4/6-1c-check-depth-one-ghost
+python autograder.py -p --test test_cases/q4/6-2a-check-depth-two-ghosts
+python autograder.py -p --test test_cases/q4/6-2b-check-depth-two-ghosts
+python autograder.py -p --test test_cases/q4/6-2c-check-depth-two-ghosts
+python autograder.py -p --test test_cases/q4/7-pacman-game
