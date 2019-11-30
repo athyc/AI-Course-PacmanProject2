@@ -332,7 +332,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     #successors.append(gameState.generateSuccessor(player,i))
                 for i in actions:
                     succ = gameState.generateSuccessor(player,i)
-                    exmaxValues.append(expectimax(depth,player+1%gameState.getNumAgents(), succ , counter+1))
+                    exmaxValues.append(expectimax(depth,(player+1)%gameState.getNumAgents(), succ , counter+1))
                 value=max(exmaxValues)
                 if(counter == 0):
                     print exmaxValues
@@ -355,12 +355,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 for i in actions:
                     succ = gameState.generateSuccessor(player,i)
                     print "calling exmax in depth",depth,"from player",player,"for successor",i
-                    exmaxValues.append(expectimax(newdepth,player+1%gameState.getNumAgents(), succ , counter+1))
+                    exmaxValues.append(expectimax(newdepth,(player+1)%gameState.getNumAgents(), succ , counter+1))
                 print exmaxValues
+                value = 0
                 for i in exmaxValues:
-                    value = i * 1.0/float(len(actions))
+                    value = value + i
                 print value
-                return value
+                return value/len(exmaxValues)
         return expectimax(self.depth,0,gameState,0)
         util.raiseNotDefined()
 
