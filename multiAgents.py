@@ -424,7 +424,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
 def mediumOfGhostDistances(currPos, ghostPos):
     rvalue = 0.0
-    for  i in ghostPos:
+    for i in ghostPos:
         rvalue = rvalue + manhattanDistance(currPos,i)
     return rvalue/len(ghostPos)
 
@@ -443,6 +443,13 @@ def noFoodNearby(currPos, foodList):
     return True
 
 
+def positiveScareTimes(scaredTimes):
+    for i in scaredTimes:
+        if i >0:
+            return True
+    return False
+
+
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -457,21 +464,24 @@ def betterEvaluationFunction(currentGameState):
     if (currentGameState.isLose()):
         return -999999
     newFood = currentGameState.getFood().asList()
+    ghostStates = currentGameState.getGhostStates()
+
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+
     foodDist = []
-    for i in newFood:
-        foodDist.append(manhattanDistance(i,currPos))
+
 
     ghostPos = currentGameState.getGhostPositions()
     if isTooCloseToAGhost(currPos, ghostPos, 1.1):
-        return -1000
+        if positiveScareTimes(scaredTimes):
+            return 200
+        return -10000
+
     food, dist = getClosestFoodWithList(currPos, newFood)
-    return currentGameState.getScore() + (1.0 / dist)
+    return currentGameState.getScore() +  100/(mediumOfGhostDistances(currPos,newFood) )
     return  1.0/(len(newFood) + 1.0)
     foodList = currentGameState.getFood().asList()
     width, length = util.getDimensions(newFood)
-    ghostStates = currentGameState.getGhostStates()
-    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
-    foodPos, foodDist = getClosestFoodWithList(currPos, foodList)
 
 
 # Abbreviation
