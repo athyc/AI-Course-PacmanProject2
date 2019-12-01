@@ -110,16 +110,7 @@ class ReflexAgent(Agent):
         # if this action brings you in range two of ghost- and ghost timer is off - return low score - prioritizes avoiding ghosts and not losing
         sum = 0
         flag = 0
-        for i in ghosts:
-            if(isWithinRange(currPos, i, 3) and euclidian(currPos, i) > euclidian(newPos,i)):
-                flag=1
-                sum = sum -200
-            elif (isWithinRange(currPos, i,2) and euclidian(currPos, i) <= euclidian(newPos, i)):
-                sum = sum + 200
-                flag=1
 
-        if (flag):
-            return sum
 
         #if this action brings you closer to ghost, return low score
         for i in range(0, len(ghosts)):
