@@ -18,6 +18,23 @@ import random, util, math
 
 from game import Agent
 
+def euclidian(x1,x2):
+    return math.sqrt((x1[0] - x2[0])*(x1[0] - x2[0]) + (x1[1] - x2[1])*(x1[1] - x2[1]))
+def isWithinRange(ghostpos, pacpos, range):
+    return euclidian(ghostpos, pacpos) <=range
+def getClosestFood(pacpos, gameState):
+    foods = gameState.getFood()
+    foodList = foods.asList()
+    all = list()
+    for i in foodList:
+        all.append(euclidian(i,pacpos))
+    return foodList[all.index(min(all))]
+def getClosestFoodWithList(pacpos, foodList):
+
+    all = list()
+    for i in foodList:
+        all.append(util.manhattanDistance(i,pacpos))
+    return foodList[all.index(min(all))],min(all)
 class ReflexAgent(Agent):
     """
       A reflex agent chooses an action at each choice point by examining
@@ -40,18 +57,18 @@ class ReflexAgent(Agent):
         """
         # Collect legal moves and successor states
         legalMoves = gameState.getLegalActions()
-        print gameState
-        print "legalmoves",legalMoves
+        #print gameState
+        #print "legalmoves",legalMoves
         # Choose one of the best actions
         scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
-        print "scores!!",scores
+        #print "scores!!",scores
         bestScore = max(scores)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
 		
         "Add more of your code here if you want to"
-        print "scores!!",scores.index(max(scores))
-        print "legalmoves",legalMoves	
+        #print "scores!!",scores.index(max(scores))
+        #print "legalmoves",legalMoves
         #athineyatsbds=raw_input()
 
         return legalMoves[chosenIndex]
@@ -72,15 +89,60 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
+
         successorGameState = currentGameState.generatePacmanSuccessor(action)
-        print "1\n",successorGameState
+        currPos = currentGameState.getPacmanPosition()
+        if(successorGameState.isWin()):
+            return 999999
+        if(successorGameState.isLose()):
+            return -999999
+        #print "1\n",successorGameState
         newPos = successorGameState.getPacmanPosition()
-        print "2",newPos
+        #print "2",newPos
         newFood = successorGameState.getFood()
-        print "3",newFood
+        #print "3",newFood
+        foods = newFood.asList()
+        ghosts = successorGameState.getGhostPositions()
         width,length = util.getDimensions(newFood)
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        #add euclidean distance somehow
+        # if this action brings you in range two of ghost- and ghost timer is off - return low score - prioritizes avoiding ghosts and not losing
+        sum = 0
+        flag = 0
+        for i in ghosts:
+            if(isWithinRange(currPos, i, 3) and euclidian(currPos, i) > euclidian(newPos,i)):
+                flag=1
+                sum = sum -200
+            elif (isWithinRange(currPos, i,2) and euclidian(currPos, i) <= euclidian(newPos, i)):
+                sum = sum + 200
+                flag=1
+
+        if (flag):
+            return sum
+
+        #if this action brings you closer to ghost, return low score
+        for i in range(0, len(ghosts)):
+
+            if(isWithinRange(ghosts[i], newPos, 2) and newScaredTimes[i]):
+                return 500
+            elif(isWithinRange(ghosts[i], newPos, 3) and not newScaredTimes[i]):
+                return -1000
+        #if increases distance from ghost - return high-ish
+        #if this move gets food, return high
+        if(newPos in foods):
+            return 1000
+        #if dist(prevpac, closest food) > dist(thispac, closestfood) return high
+
+        prevclos = getClosestFood(currentGameState.getPacmanPosition(),currentGameState)
+        if ( euclidian(prevclos, currentGameState.getPacmanPosition()) > euclidian(prevclos, newPos)):
+            return 550
+        return 100
+
+        # else if thsi action brings you near ghost and ghost timer is off - return high score - prioritize hunting ghosts
+        # if this action brings you closer to food, return high score something stable / len of foods - gravitates toward  food
+
+        """
         rvalue=0
         distancesFromGhost=list()
         distancesFromFood=list()
@@ -98,10 +160,9 @@ class ReflexAgent(Agent):
         	print "rvalue food",rvalue
         rvalue=rvalue-(width*length - len(newFood.asList()))*min(distancesFromFood)
         "*** YOUR CODE HERE ***"
-        
-        
-        
+
         return rvalue
+        """
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -160,13 +221,13 @@ class MinimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         def minimax(depth, player, gameState, counter):
             
-            print "[playing",player
+            #print "[playing",player
             #print "state\n",gameState
-            print "depth",depth
-            print 'node',counter
+            #print "depth",depth
+            #print 'node',counter
             #raw_input()
             if(gameState.isWin() or gameState.isLose() or depth==0):
-               print 'reached finale]',depth,gameState.isWin() , gameState.isLose(),'\n',gameState
+               #print 'reached finale]',depth,gameState.isWin() , gameState.isLose(),'\n',gameState
                #raw_input()
                return self.evaluationFunction(gameState)
             successors=list()
@@ -216,7 +277,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 		
         #print 'finished a call'
         #raw_input()
-        print self.depth
+        #print self.depth
         ndepth = (self.depth)
         rvalue = minimax(ndepth, 0, gameState, 0)
         #print rvalue
@@ -239,7 +300,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         def alphabeta(depth, player, gameState, a, b, counter):
-            print "caling abeta"
+            #print "caling abeta"
             if(gameState.isWin() or gameState.isLose() or depth==0):
                 #print 'reached finale]',depth,self.evaluationFunction(gameState)
                 return self.evaluationFunction(gameState)
@@ -248,26 +309,26 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             if player == 0:
                 actions= gameState.getLegalActions()
                 value = - float("inf")
-                for i in actions:
-                    print i #printactions
+                #for i in actions:
+                    #print i #printactions
                     #print gameState.generateSuccessor(player,i)
                     #successors.append(gameState.generateSuccessor(player,i))
                 for i in actions:
                     succ = gameState.generateSuccessor(player, i)
-                    print "calling abeta in depth",depth,"from player",player,"for successor",i
+                    #print "calling abeta in depth",depth,"from player",player,"for successor",i
                     value=max(value,alphabeta(depth  , (player+1)%gameState.getNumAgents(),succ,a,b,counter+1))
                     abetaValues.append(value)
 
                     if value> b:
-                        print 'a is greater or eq to b'
+                        #print 'a is greater or eq to b'
                         #raw_input()
                         return value
                         break
                     a = max(a, value)
                 if counter == 0:
 
-                    print abetaValues
-                    print "to befinally returned",actions[abetaValues.index(value)]
+                    #print abetaValues
+                    #print "to befinally returned",actions[abetaValues.index(value)]
                     return actions[abetaValues.index(value)]
                     #raw_input()
                     
@@ -276,7 +337,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 newdepth = depth
                 if player == gameState.getNumAgents() - 1:
                     newdepth = depth - 1
-                print "now playing ghost"
+                #print "now playing ghost"
                 actions= gameState.getLegalActions(player)
                 value =  float("inf")
                 #for i in actions:
@@ -286,11 +347,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                     #successors.append(gameState.generateSuccessor(player,i))
                 for i in actions:
                     succ = gameState.generateSuccessor(player, i)
-                    print "calling abeta in depth",depth,"from player",player,"for successor",i
+                    #print "calling abeta in depth",depth,"from player",player,"for successor",i
                     value=min(value,alphabeta(newdepth  , (player+1)%gameState.getNumAgents(),succ,a,b,counter+1))
 
                     if a> value:
-                        print 'a is greater or eq to b'
+                        #print 'a is greater or eq to b'
                         return value
                         #raw_input()
                         break
@@ -298,7 +359,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
                 return value
         res=alphabeta(self.depth, 0, gameState, - float("inf"), float("inf"), 0)
-        print 'final abeta res', res
+        #print 'final abeta res', res
         #raw_input()
         return res
         util.raiseNotDefined()
@@ -317,17 +378,21 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         def expectimax(depth , player , gameState , counter):
+            #print "calling expectimax"
+
             if(gameState.isWin() or gameState.isLose() or depth==0):
                 #print 'reached finale]',depth,self.evaluationFunction(gameState)
-                return self.evaluationFunction(gameState)
+                rvalue = self.evaluationFunction(gameState)
+                return rvalue
             successors=list()
             exmaxValues=list()
             if player ==0:
+
                 actions= gameState.getLegalActions()
                 
                 
-                for i in actions:
-                    print i #printactions
+                #for i in actions:
+                    #print i #printactions
                     #print gameState.generateSuccessor(player,i)
                     #successors.append(gameState.generateSuccessor(player,i))
                 for i in actions:
@@ -335,35 +400,57 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     exmaxValues.append(expectimax(depth,(player+1)%gameState.getNumAgents(), succ , counter+1))
                 value=max(exmaxValues)
                 if(counter == 0):
-                    print exmaxValues
-                    print "to befinally returned",actions[exmaxValues.index(value)]
+                    #print exmaxValues
+                    #print "to befinally returned",actions[exmaxValues.index(value)]
                     #raw_input()
                     return actions[exmaxValues.index(value)]
-                print value,']'
+                #print value,']'
                 return value
             if player !=0:
-                print "now playing ghost"
+                #print "now playing ghost"
                 actions= gameState.getLegalActions(player)
                 newdepth = depth
                 if player == gameState.getNumAgents() - 1:
                     newdepth = depth - 1
-                for i in actions:
-                    print i #printactions
+                #for i in actions:
+                    #print i #printactions
                     #print
                     #successors.append(gameState.generateSuccessor(player,i))
                     #raw_input()
                 for i in actions:
                     succ = gameState.generateSuccessor(player,i)
-                    print "calling exmax in depth",depth,"from player",player,"for successor",i
+                    #print "calling exmax in depth",depth,"from player",player,"for successor",i
                     exmaxValues.append(expectimax(newdepth,(player+1)%gameState.getNumAgents(), succ , counter+1))
-                print exmaxValues
-                value = 0
+                #print exmaxValues
+                value =0
                 for i in exmaxValues:
-                    value = value + i
-                print value
-                return value/len(exmaxValues)
+                    value =  value + i
+                #print value  * 1.0/float(len(actions))
+                return value * 1.0/float(len(actions))
         return expectimax(self.depth,0,gameState,0)
         util.raiseNotDefined()
+
+
+def mediumOfGhostDistances(currPos, ghostPos):
+    rvalue = 0.0
+    for  i in ghostPos:
+        rvalue = rvalue + manhattanDistance(currPos,i)
+    return rvalue/len(ghostPos)
+
+
+def isTooCloseToAGhost(currPos, ghostPos, range):
+    for i in ghostPos:
+        if euclidian(i, currPos) < range:
+            return True
+    return False
+
+
+def noFoodNearby(currPos, foodList):
+    for i in foodList:
+        if euclidian(i,currPos) < 3:
+            return False
+    return True
+
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -373,7 +460,28 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    currPos = currentGameState.getPacmanPosition()
+    if (currentGameState.isWin()):
+        return 999999
+    if (currentGameState.isLose()):
+        return -999999
+    newFood = currentGameState.getFood().asList()
+    foodDist = []
+    for i in newFood:
+        foodDist.append(manhattanDistance(i,currPos))
+
+    ghostPos = currentGameState.getGhostPositions()
+    if isTooCloseToAGhost(currPos, ghostPos, 1.1):
+        return -1000
+    food, dist = getClosestFoodWithList(currPos, newFood)
+    return currentGameState.getScore() + (1.0 / dist)
+    return  1.0/(len(newFood) + 1.0)
+    foodList = currentGameState.getFood().asList()
+    width, length = util.getDimensions(newFood)
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+    foodPos, foodDist = getClosestFoodWithList(currPos, foodList)
+
 
 # Abbreviation
 better = betterEvaluationFunction
